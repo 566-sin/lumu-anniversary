@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>橹穆恋爱日志</title>
+<style>
+  :root {
+    --pink-bg: #fff2f6;
+    --pink-soft: #ffdce7;
+    --pink: #e0608f;
+    --pink-deep: #c9447a;
+    --blue-bg: #eef5ff;
+    --blue-soft: #d7e8ff;
+    --blue: #3f7fd8;
+    --blue-deep: #2c63b5;
+    --text: #4a4058;
+    --muted: #8d8499;
+    --line: #f0e4ec;
+    --shadow: 0 6px 22px rgba(201, 120, 160, 0.13);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, #e8f4ff 0%, #f6f1ff 50%, #fff0f5 100%) fixed;
+    line-height: 1.6;
+  }
+  button { font-family: inherit; cursor: pointer; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 16px 40px; }
+
+  header.top { text-align: center; margin-bottom: 24px; }
+  header.top h1 {
+    margin: 0; font-size: clamp(26px, 5vw, 36px); letter-spacing: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--pink-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header.top p { margin: 8px 0 0; color: var(--muted); font-size: 15px; letter-spacing: 1px; }
+
+  .panel {
+    background: rgba(255, 255, 255, 0.82);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+  }
+
+  /* ---------- About 橹穆 ---------- */
+  .about { margin-bottom: 22px; }
+  .about h2 { margin: 0 0 14px; font-size: 21px; text-align: center; color: var(--text); letter-spacing: 1px; }
+  .about h2 span { color: var(--blue); }
+  .about h2 span + span { color: var(--pink-deep); }
+  .profiles { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: stretch; }
+  .profiles > * { min-width: 0; }
+  .profiles .heart { display: none; }
+  @media (min-width: 680px) {
+    .profiles { grid-template-columns: 1fr auto 1fr; }
+    .profiles .heart { display: flex; align-items: center; font-size: 26px; color: var(--pink); }
+  }
+  .profile { border-radius: 16px; padding: 16px 18px; border: 1px dashed; }
+  .profile.blue { background: var(--blue-bg); border-color: #c4dcfb; }
+  .profile.pink { background: var(--pink-bg); border-color: #f8c6d7; }
+  .p-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .p-name { font-size: 20px; font-weight: 800; }
+  .profile.blue .p-name { color: var(--blue-deep); }
+  .profile.pink .p-name { color: var(--pink-deep); }
+  .p-role { font-size: 13px; color: var(--muted); }
+  .profile dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 14px; }
+  .profile dt { color: var(--muted); }
+  .profile dd { margin: 0; }
+  .p-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .p-stats span { font-size: 12px; background: #fff; border-radius: 999px; padding: 2px 10px; }
+  .profile.blue .p-stats span { color: var(--blue-deep); }
+  .profile.pink .p-stats span { color: var(--pink-deep); }
+
+  /* ---------- 两栏 ---------- */
+  .layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+  .layout > * { min-width: 0; }
+  @media (min-width: 880px) {
+    .layout { grid-template-columns: minmax(340px, 440px) 1fr; align-items: start; }
+    .col-left { position: sticky; top: 20px; }
+    .anniv-list { max-height: calc(100vh - 230px); min-height: 320px; overflow-y: auto; }
+  }
+
+  /* ---------- 日历 ---------- */
+  .clock {
+    text-align: center; font-size: 14px; color: var(--blue-deep);
+    background: var(--blue-bg); border-radius: 12px; padding: 8px 10px; margin-bottom: 14px;
+  }
+  .clock small { color: var(--muted); margin-left: 6px; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .cal-nav .month { font-size: 19px; font-weight: 700; color: var(--pink-deep); flex: 1; text-align: center; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: var(--pink-bg); color: var(--pink-deep); font-size: 22px; line-height: 1;
+    transition: background .15s;
+  }
+  .icon-btn:hover { background: var(--pink-soft); }
+  .today-btn {
+    border: 1px solid var(--blue-soft); background: #fff; color: var(--blue-deep);
+    border-radius: 999px; padding: 5px 12px; font-size: 13px; white-space: nowrap;
+  }
+  .today-btn:hover { background: var(--blue-bg); }
+
+  .weekdays, .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .weekdays div { text-align: center; font-size: 13px; color: var(--muted); padding: 4px 0; }
+  .weekdays div:first-child, .weekdays div:last-child { color: var(--pink); }
+  .day {
+    position: relative; border: none; background: transparent; color: var(--text);
+    aspect-ratio: 1 / 1; border-radius: 12px; font-size: 15px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: background .15s, transform .15s;
+    padding: 0;
+  }
+  .day:hover { background: var(--blue-bg); }
+  .day.empty { pointer-events: none; }
+  .day.today { background: var(--pink); color: #fff; font-weight: 700; box-shadow: 0 4px 12px rgba(224, 96, 143, .35); }
+  .day.today:hover { background: var(--pink-deep); }
+  .day.selected:not(.today) { background: var(--blue-soft); color: var(--blue-deep); font-weight: 700; }
+  .day.selected.today { outline: 3px solid var(--blue-soft); outline-offset: 1px; }
+  .day.flash { animation: flash 1s ease 2; }
+  @keyframes flash { 50% { transform: scale(1.15); } }
+  .dots { display: flex; gap: 3px; height: 6px; margin-top: 2px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); display: inline-block; }
+  .dot.anniv { background: var(--blue); }
+  .dot.bday { background: linear-gradient(90deg, var(--blue), var(--pink)); }
+  .day.today .dot { background: #fff; }
+  .legend { display: flex; gap: 14px; justify-content: center; font-size: 12px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+  .detail {
+    margin-top: 16px; padding: 14px 16px; border-radius: 14px;
+    background: var(--pink-bg); border: 1px dashed var(--pink-soft);
+    animation: open .25s ease;
+  }
+  @keyframes open { from { opacity: 0; transform: translateY(-6px); } }
+  .detail h3 { margin: 0 0 8px; font-size: 15px; color: var(--pink-deep); }
+  .detail .item { background: #fff; border-radius: 10px; padding: 9px 12px; margin-top: 8px; }
+  .detail .item .tag { display: inline-block; font-size: 12px; padding: 0 8px; border-radius: 999px; margin-right: 6px; }
+  .tag.origin { background: var(--pink-soft); color: var(--pink-deep); }
+  .tag.yearly { background: var(--blue-soft); color: var(--blue-deep); }
+  .tag.bday { background: linear-gradient(90deg, var(--blue-soft), var(--pink-soft)); color: var(--text); }
+  .detail .item p { margin: 4px 0 0; font-size: 13px; color: var(--muted); white-space: pre-wrap; }
+  .detail .item .chap-line { font-size: 12px; color: var(--blue-deep); margin-top: 2px; }
+  .detail .none { color: var(--muted); font-size: 14px; margin: 0; }
+  .link-btn { border: none; background: none; color: var(--blue-deep); padding: 0; font-size: 13px; text-decoration: underline; margin-top: 6px; }
+
+  /* ---------- 右栏 ---------- */
+  .right-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .right-head h2 { margin: 0; font-size: 21px; color: var(--pink-deep); }
+  .right-head .asof { font-size: 13px; color: var(--muted); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 10px; }
+  .filter { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+  .filter select {
+    font: inherit; font-size: 14px; color: var(--text); max-width: 100%;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; background: #fff; outline: none;
+  }
+  .btn {
+    border: none; border-radius: 999px; padding: 8px 16px; font-size: 14px;
+    transition: transform .1s, background .15s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: var(--pink); color: #fff; box-shadow: 0 4px 12px rgba(224, 96, 143, .3); }
+  .btn.primary:hover { background: var(--pink-deep); }
+  .btn.soft { background: var(--blue-bg); color: var(--blue-deep); }
+  .btn.soft:hover { background: var(--blue-soft); }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+  .btn.ghost:hover { background: #fff; }
+  .btn.small { padding: 5px 12px; font-size: 13px; }
+  .btn.danger { background: transparent; color: #d0577b; border: 1px solid var(--pink-soft); }
+  .btn.danger:hover { background: var(--pink-bg); }
+
+  .anniv-list { display: flex; flex-direction: column; gap: 14px; padding: 2px 4px 4px 2px; }
+  .card {
+    background: linear-gradient(140deg, #fff 0%, var(--pink-bg) 100%);
+    border-radius: 16px; padding: 16px 18px; border: 1px solid var(--line);
+    box-shadow: 0 3px 12px rgba(201, 120, 160, 0.08);
+  }
+  .card.future { background: linear-gradient(140deg, #fff 0%, var(--blue-bg) 100%); border-color: #e0ebfa; }
+  .card.is-today { border: 2px solid var(--pink-soft); }
+  .chap {
+    display: inline-block; font-size: 12px; color: var(--blue-deep); background: var(--blue-bg);
+    border: none; border-radius: 999px; padding: 1px 10px; margin-bottom: 6px; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .chap:hover { background: var(--blue-soft); }
+  .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .card h3 { margin: 0; font-size: 17px; color: var(--text); word-break: break-word; }
+  .card .date { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .count { margin: 10px 0 4px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .count .label { font-size: 14px; color: var(--muted); }
+  .count .num { font-size: 44px; font-weight: 800; line-height: 1.1; color: var(--pink-deep); font-variant-numeric: tabular-nums; }
+  .count .unit { font-size: 15px; color: var(--pink-deep); }
+  .card.future .count .num, .card.future .count .unit { color: var(--blue); }
+  .count .party { font-size: 30px; font-weight: 800; color: var(--pink-deep); }
+  .card .desc { margin: 4px 0 8px; font-size: 14px; color: #6d6378; white-space: pre-wrap; word-break: break-word; }
+  .meta { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--blue-deep); }
+  .meta span::before { content: "✧ "; color: var(--pink); }
+  .card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .empty-tip { text-align: center; color: var(--muted); padding: 40px 0; }
+
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 26px; }
+  footer .tbc { font-size: 18px; color: var(--pink-deep); letter-spacing: 3px; margin-bottom: 8px; }
+  footer button { font-size: 12px; }
+
+  /* ---------- 弹窗 ---------- */
+  .mask {
+    position: fixed; inset: 0; background: rgba(74, 64, 88, .32);
+    display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+  }
+  .mask.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 20px; width: 100%; max-width: 420px; max-height: calc(100vh - 32px); overflow-y: auto;
+    padding: 22px; box-shadow: 0 20px 50px rgba(74, 64, 88, .25); animation: open .2s ease;
+  }
+  .modal h3 { margin: 0 0 14px; color: var(--pink-deep); }
+  .modal label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  .modal input, .modal textarea {
+    width: 100%; font: inherit; color: var(--text); padding: 9px 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fffafc; outline: none;
+  }
+  .modal input:focus, .modal textarea:focus { border-color: var(--pink); background: #fff; }
+  .modal textarea { min-height: 90px; resize: vertical; }
+  .modal .err { color: #d0577b; font-size: 13px; min-height: 18px; margin-top: 6px; }
+  .modal .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+    background: rgba(74, 64, 88, .9); color: #fff; padding: 9px 18px; border-radius: 999px;
+    font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 60;
+    max-width: calc(100% - 32px); text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    .wrap { padding-top: 22px; }
+    .panel { padding: 16px; }
+    .count .num { font-size: 38px; }
+    .day { font-size: 14px; border-radius: 10px; }
+  }
+</style>
+</head>
+<body>
+<script>
+/* =====================================================================
+ *  ✦ 人物资料 —— 显示在顶部「About 橹穆」，生日会在日历上每年标出 ✦
+ * ===================================================================== */
+const PROFILES = [
+  { name: "王橹杰", color: "blue", role: "TF家族四代练习生", birthday: "2010-01-08", debut: "2022-10-06",
+    zodiac: "摩羯座", ethnic: "彝族", mbti: "ENFJ", nick: "豚豚、困困等" },
+  { name: "穆祉丞", color: "pink", role: "TF-ING厂牌艺人", birthday: "2007-11-16", debut: "2019-10-06",
+    zodiac: "天蝎座", ethnic: "汉族", mbti: "ENTP", nick: "恩仔、馒头等" },
+];
+
+/* =====================================================================
+ *  ✦ 纪念日数据 —— 想在代码里加纪念日，就在这个数组里加一行 ✦
+ *  格式：{ date: "YYYY-MM-DD", chapter: "第几章 章节名", title: "标题", desc: "描述" },
+ *  - chapter 可以不写；写了的话，右栏可以按章节筛选
+ *  - 这里新加的条目会自动出现在页面上（即使你在网页上改过别的数据）
+ * ===================================================================== */
+const ANNIVERSARIES = [
+  // —— 前言 ——
+  { date: "2019-10-06", chapter: "前言", title: "穆祉丞公开日", desc: "穆祉丞正式公开。" },
+  { date: "2022-10-06", chapter: "前言", title: "王橹杰公开日", desc: "王橹杰正式公开——和穆祉丞一样，都是 10 月 6 日。" },
+
+  // —— 第一章 壁纸：公之于众 ——
+  { date: "2024-12-19", chapter: "第一章 壁纸：公之于众", title: "「有点der」的照片", desc: "穆祉丞在高会发布自评「有点der」的照片。" },
+  { date: "2025-02-11", chapter: "第一章 壁纸：公之于众", title: "壁纸第一次被拍到", desc: "王橹杰的手机壁纸第一次被拍到。" },
+  { date: "2025-02-14", chapter: "第一章 壁纸：公之于众", title: "壁纸第二次被拍到", desc: "王橹杰的手机壁纸第二次被拍到。" },
+  { date: "2025-02-15", chapter: "第一章 壁纸：公之于众", title: "壁纸：公之于众", desc: "王橹杰上班时壁纸被拍到，正是穆祉丞 2024.12.19 发布的那张照片。后来才发现，壁纸之前已经两次被拍到。" },
+
+  // —— 第二章 2023新音：缘起 ——
+  { date: "2023-01-15", chapter: "第二章 2023新音：缘起", title: "《街舞少年》：缘起", desc: "TF家族2023新年音乐会《街舞少年》中，穆祉丞（15岁）将角落里无助的王橹杰（13岁）拉到舞台前。\n距第一章——3年前。" },
+
+  // —— 第三章 网易云：得意黑 ——
+  { date: "2023-01-26", chapter: "第三章 网易云：得意黑", title: "注册网易云", desc: "《街舞少年》舞台官摄上传同日，王橹杰注册网易云账号，上传了穆祉丞的AI兔子妆造图。" },
+  { date: "2023-08-18", chapter: "第三章 网易云：得意黑", title: "网名「得意黑」", desc: "物料：王橹杰最开始的网名是「得意黑」。经发现，字体「得意黑」的发布日期与穆祉丞生日同天（11月16日）。" },
+  { date: "2023-11-03", chapter: "第三章 网易云：得意黑", title: "网易云评论 · kimidoll", desc: "「是温柔到极致的病态还是思念成疾的憔悴」" },
+  { date: "2023-11-13", chapter: "第三章 网易云：得意黑", title: "网易云评论 · Six Forty Seven", desc: "「你的名字永刻地底 我的名字向死而生」" },
+  { date: "2024-04-07", chapter: "第三章 网易云：得意黑", title: "网易云评论", desc: "「如果我不是彝族呢……」" },
+  { date: "2024-06-02", chapter: "第三章 网易云：得意黑", title: "网易云评论 · 如果爱忘了 (live)", desc: "「梦里什么都有 所以我选择摒弃现实」" },
+
+  // —— 第四章 祝你星途璀璨 ——
+  { date: "2024-07-02", chapter: "第四章 祝你星途璀璨", title: "出道站内幕", desc: "登陆计划期间，穆祉丞得知出道站内幕后情绪崩溃，暴走上热搜。" },
+  { date: "2024-07-04", chapter: "第四章 祝你星途璀璨", title: "祝你星途璀璨", desc: "工作人员问：「如果以后不太有机会和师兄们见面，会对他们说什么？」\n大多数人的主语是「他们」「师兄们」，王橹杰答：「祝你星途璀璨」。" },
+
+  // —— 第五章 2024运动会：祉疼药 ——
+  { date: "2024-07-06", chapter: "第五章 2024运动会：祉疼药", title: "祉疼药", desc: "2024运动会（07.06–07.07），王橹杰胃疼到面色发白，但看着玩闹的穆祉丞还是露出笑容；侧身倚靠，听穆祉丞与TS交谈后笑了。" },
+
+  // —— 第六章 登陆日 ——
+  { date: "2024-08-26", chapter: "第六章 登陆日", title: "马来西亚出道夜", desc: "登陆计划马来西亚出道夜。" },
+  { date: "2024-08-27", chapter: "第六章 登陆日", title: "飞机上的眼泪", desc: "穆祉丞相关词条登上热搜。王橹杰在飞机上被拍到看了一眼手机后抹眼泪；下飞机后等待时双眼含泪但泪水并未掉落，直至上车之后被拍到在车中继续落泪。" },
+
+  // —— 第七章 落叶知秋 ——
+  { date: "2024-10-01", chapter: "第七章 落叶知秋", title: "穆祉丞厂牌出道", desc: "穆祉丞以TF_ING厂牌成员出道。\n（按照公司惯例，未出道练习生会回归素人或转型影视部）" },
+  { date: "2024-10-21", chapter: "第七章 落叶知秋", title: "落叶知秋", desc: "王橹杰在落叶上写：「落叶知秋，我还以为你不说再见就走了呢」。" },
+  { date: "2025-11-16", chapter: "第七章 落叶知秋", title: "那我就好好地留下来吧", desc: "穆祉丞生日故事集《Eleutheria》第七章：「那我就好好地留下来吧」，配图是一片叶子。" },
+
+  // —— 第八章 楼道庆生 ——
+  { date: "2024-11-16", chapter: "第八章 楼道庆生", title: "楼道庆生 · 原片拍摄日", desc: "王橹杰的楼道庆生图经还原，原片拍摄时间正是 11 月 16 日——穆祉丞的生日。" },
+  { date: "2024-11-19", chapter: "第八章 楼道庆生", title: "楼道庆生", desc: "王橹杰发布在楼道拿着小油灯给海德薇吃哈利波特生日蛋糕庆生的照片。\n小夜灯有三款，最热门的是 9¾ 站台，海德薇款并不热门，但王橹杰选了海德薇。" },
+
+  // —— 第九章 海德薇和没有手的猫 ——
+  { date: "2024-11-15", chapter: "第九章 海德薇和没有手的猫", title: "车里的海德薇", desc: "工作人员突然从成都接王橹杰回重庆，他被拍到在地下车库的车里悄悄整理海德薇的蓝色围巾，发现被拍后把海德薇藏在胸前，直视前方、一动不动。\n另外，王橹杰家中还有一个佩戴格莱芬多学院围巾的大号海德薇（与穆祉丞学院相同）。" },
+  { date: "2024-12-05", chapter: "第九章 海德薇和没有手的猫", title: "素耳夹", desc: "穆祉丞佩戴素耳夹参加小马遇见大海盛典。" },
+  { date: "2024-12-20", chapter: "第九章 海德薇和没有手的猫", title: "没有手的猫", desc: "（物料发布）王橹杰介绍小猫玩偶是他的新伙伴，给小黑猫戴上了素耳夹。\n「他的朋友是一只没有手的猫」「我相信它能一直陪伴我」" },
+
+  // —— 第十章 不是diss是kiss ——
+  { date: "2024-07-06", chapter: "第十章 不是diss是kiss", title: "偷看被抓包", desc: "2024运动会（07.06–07.07），王橹杰偷看被抓包，翻了个白眼；穆祉丞刻意放慢脚步想和王橹杰搭话，王橹杰径直走过，穆祉丞只能无奈笑。" },
+  { date: "2025-02-11", chapter: "第十章 不是diss是kiss", title: "「四代连ing都瞪啊？」", desc: "（物料发布）王橹杰偷看穆祉丞时，弹幕：「四代连ing都瞪啊？想上天吗？」" },
+
+  // —— 第十一章 不心动挑战：紧张吗，有点 ——
+  { date: "2025-07-12", chapter: "第十一章 不心动挑战：紧张吗，有点", title: "紧张吗？有点", desc: "（07.12–07.13）不心动挑战炸翻全场：「紧张吗？」「有点。」紧接着是被主持人cue到后依旧保持沉默的王橹杰。\n拍背背卡时，和其他师兄弟相比，两人的互动比较克制、内敛。\n公开活动与互动环节中，王橹杰多次偷看穆祉丞，和他做一样的小动作，甚至触碰穆祉丞曾接触过的桌面边角；穆祉丞从王橹杰旁边挤过去。" },
+
+  // —— 第十二章 913音乐节 ——
+  { date: "2025-09-13", chapter: "第十二章 913音乐节", title: "913音乐节", desc: "广州南沙音乐节（仅做时间线论述）。" },
+
+  // —— 第十三章 我一直是我 ——
+  { date: "2025-09-14", chapter: "第十三章 我一直是我", title: "谢谢所有粉丝", desc: "穆祉丞参加音乐节，在采访中说谢谢支持他的所有粉丝。" },
+  { date: "2025-09-21", chapter: "第十三章 我一直是我", title: "希望每一位爱我的人", desc: "穆祉丞在直播中说「希望每一位爱我的人都能来我的演唱会」。" },
+  { date: "2025-10-02", chapter: "第十三章 我一直是我", title: "我一直都是我", desc: "穆祉丞在高会发布壁纸同款特效自拍，配文「我一直都是我」，#穆祉丞啥意思 上热搜。" },
+  { date: "2025-10-07", chapter: "第十三章 我一直是我", title: "一封手写信", desc: "穆祉丞个人专场，伴手礼是一封手写信。" },
+
+  // —— 第十四章 莆田音乐节 ——
+  { date: "2025-11-09", chapter: "第十四章 莆田音乐节", title: "莆田音乐节", desc: "穆祉丞多次饭撒CP粉；问当地美食时，在所有人大喊「卤面」的情况下说出「鱼丸」——卤面是莆田当地特色美食之一，鱼丸不是。\n大屏中，橹穆灯牌与穆祉丞身影重合。" },
+
+  // —— 第十五章 兔子外套 ——
+  { date: "2025-10-18", chapter: "第十五章 兔子外套", title: "白色兔子外套", desc: "穆祉丞穿王橹杰同款兔子外套（白色款）落地北京。" },
+  { date: "2025-11-16", chapter: "第十五章 兔子外套", title: "黑色兔子外套", desc: "穆祉丞生日当天，王橹杰再次穿上明显已经小了的兔子外套（黑色款），当时重庆 17 度。" },
+
+  // —— 第十六章 多远都要在一起 ——
+  { date: "2024-05-17", chapter: "第十六章 多远都要在一起", title: "唱完落泪", desc: "（物料发布）王橹杰演唱完《多远都要在一起》后落泪。" },
+  { date: "2025-10-21", chapter: "第十六章 多远都要在一起", title: "我能习惯远距离", desc: "王橹杰坐北京欢乐谷「X」战车，害怕时一边尖叫一边唱「我能习惯远距离」「身不由己」。" },
+  { date: "2025-11-15", chapter: "第十六章 多远都要在一起", title: "爱能克服远距离吗", desc: "（物料发布）王橹杰问同事：「你觉得爱能克服远距离吗？」" },
+  { date: "2025-11-23", chapter: "第十六章 多远都要在一起", title: "正式录制", desc: "正式录制。" },
+  { date: "2025-11-29", chapter: "第十六章 多远都要在一起", title: "再唱《多远都要在一起》", desc: "（物料发布）11月考核，王橹杰再度演唱《多远都要在一起》。" },
+
+  // —— 第十七章 懂得都懂 ——
+  { date: "2025-12-28", chapter: "第十七章 懂得都懂", title: "懂的都懂", desc: "（物料发布）被问「你最近有什么开心的事情吗？」王橹杰：「我觉得我来到北京……懂的都懂」。\n被问最珍贵的东西和困惑时答：「我最珍贵的东西是爱……爱是世界上最伟大的魔法」。" },
+  { date: "2026-01-03", chapter: "第十七章 懂得都懂", title: "爱不会永存", desc: "（物料发布）厂牌物料中，穆祉丞说：「我觉得爱不会永存，但其实对我自己来说，我自己也会去往这方面做」。" },
+
+  // —— 第十八章 合练、联排 ——
+  { date: "2025-12-22", chapter: "第十八章 合练、联排", title: "合练、联排", desc: "（12.22–12.25）\n1. 美杜莎、天魔合练；\n2. 天魔联排时王橹杰脸部和脖子明显变红；\n3. 双人采访。" },
+
+  // —— 第十九章 族综 ——
+  { date: "2025-12-20", chapter: "第十九章 族综", title: "憋不住笑", desc: "（12.20–12.21）穆祉丞塞满嘴小零食，王橹杰看到后扭头憋不住笑了。" },
+
+  // —— 第二十章 2026新音：同台 ——
+  { date: "2025-11-01", chapter: "第二十章 2026新音：同台", title: "练习螳螂步", desc: "（物料发布）王橹杰练习螳螂步。" },
+  { date: "2025-11-29", chapter: "第二十章 2026新音：同台", title: "下盘不稳", desc: "（物料发布）老师说王橹杰「下盘不稳」。" },
+  { date: "2025-12-26", chapter: "第二十章 2026新音：同台", title: "美杜莎舞台", desc: "（12.26–12.28）美杜莎舞台。出场时，王橹杰看到蓝粉海落泪。\n《街舞少年》中，穆祉丞下意识想搂师弟，但像想到什么，突然收回手。" },
+  { date: "2025-12-27", chapter: "第二十章 2026新音：同台", title: "来自天堂的魔鬼舞台", desc: "天魔诞生，橹穆第一个正式双人舞台。\n现实情况：王橹杰比穆祉丞高半个头，穆祉丞是舞担，王橹杰是歌担；\n最终呈现：王橹杰大幅度屈膝，几乎每个动作都和穆祉丞持平，而高音几乎都由穆祉丞来唱。\n——从下盘不稳，到与他平行。" },
+  { date: "2026-03-03", chapter: "第二十章 2026新音：同台", title: "元宵喜乐会", desc: "元宵喜乐会，穆祉丞眼中映出长灯牌，眼角有泪花。" },
+
+  // —— 第二十一章 「第一次」双人合作 ——
+  { date: "2026-01-17", chapter: "第二十一章 「第一次」双人合作", title: "「之前没有尝试过的双人舞台」", desc: "穆祉丞在微博vlog中说，天魔是之前没有尝试过的双人舞台，算是全新的体验。\n（穆祉丞过去其实和同事合作过双人舞台）" },
+
+  // —— 第二十二章 荣耀之战 ——
+  { date: "2025-08-17", chapter: "第二十二章 荣耀之战", title: "轻轻摇了摇头", desc: "四公舞台，王橹杰看到「橹杰 等你和师兄的双人舞台」的饭撒牌后，轻轻摇了摇头。" },
+  { date: "2026-01-31", chapter: "第二十二章 荣耀之战", title: "同款饭撒", desc: "（01.31–02.01）摄影师、猫耳等同款饭撒。" },
+  { date: "2026-02-01", chapter: "第二十二章 荣耀之战", title: "摸摸耳朵", desc: "王橹杰看到饭撒牌「lulu还想和哥哥有双人舞台就摸摸耳朵」后，多次摸耳朵。" },
+];
+</script>
+
+<div class="wrap">
+  <header class="top">
+    <h1>✦ 橹穆恋爱日志</h1>
+    <p>把日子写成故事，把故事留给时光。</p>
+  </header>
+
+  <section class="about panel">
+    <h2>About <span>橹</span><span>穆</span></h2>
+    <div class="profiles" id="profiles"></div>
+  </section>
+
+  <main class="layout">
+    <!-- 左栏：日历 -->
+    <section class="col-left panel" id="calendarPanel">
+      <div class="clock" id="clock">—</div>
+      <div class="cal-nav">
+        <button class="icon-btn" id="prevMonth" aria-label="上个月">‹</button>
+        <div class="month" id="monthLabel"></div>
+        <button class="icon-btn" id="nextMonth" aria-label="下个月">›</button>
+        <button class="today-btn" id="goToday">回到今天</button>
+      </div>
+      <div class="weekdays">
+        <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+      </div>
+      <div class="days" id="days"></div>
+      <div class="legend">
+        <span><i class="dot"></i>纪念日</span>
+        <span><i class="dot anniv"></i>周年日</span>
+        <span><i class="dot bday"></i>生日</span>
+      </div>
+      <div class="detail" id="detail"></div>
+    </section>
+
+    <!-- 右栏：纪念日 -->
+    <section class="panel">
+      <div class="right-head">
+        <h2>♡ 重要纪念日</h2>
+        <span class="asof" id="asof"></span>
+      </div>
+      <div class="toolbar">
+        <button class="btn primary" id="addBtn">＋ 添加纪念日</button>
+        <button class="btn soft" id="exportBtn">导出 JSON</button>
+        <button class="btn soft" id="importBtn">导入 JSON</button>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+      </div>
+      <div class="filter">
+        <label for="chapterFilter">章节</label>
+        <select id="chapterFilter"></select>
+        <span id="countInfo"></span>
+      </div>
+      <div class="anniv-list" id="list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="tbc">未完待续……</div>
+    <div>所有时间均按北京时间（东八区）计算 · 网页上的修改仅保存在本浏览器</div>
+    <button class="link-btn" id="resetBtn">恢复为代码中的初始数据</button>
+  </footer>
+</div>
+
+<!-- 添加 / 编辑弹窗 -->
+<div class="mask" id="mask">
+  <form class="modal" id="form" autocomplete="off">
+    <h3 id="formTitle">添加纪念日</h3>
+    <label for="fDate">日期</label>
+    <input type="date" id="fDate" required>
+    <label for="fChapter">章节（可选）</label>
+    <input type="text" id="fChapter" maxlength="60" list="chapterList" placeholder="例如：第二十三章 双人手写卡背">
+    <datalist id="chapterList"></datalist>
+    <label for="fTitle">标题</label>
+    <input type="text" id="fTitle" maxlength="60" placeholder="例如：第一次同台" required>
+    <label for="fDesc">描述（可选）</label>
+    <textarea id="fDesc" maxlength="1000" placeholder="写点什么吧～"></textarea>
+    <div class="err" id="fErr"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="cancelBtn">取消</button>
+      <button type="submit" class="btn primary">保存</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  const TZ = 'Asia/Shanghai';
+  const STORAGE_KEY = 'lumu-anniversaries-v1';
+  const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  const MS_PER_DAY = 86400000;
+
+  /* ---------------- 日期工具（全部用 年-月-日 整数计算） ---------------- */
+  const pad = n => String(n).padStart(2, '0');
+  const toKey = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;
+  // 把年月日转成「第几天」的整数：UTC 零点 / 86400000，避免夏令时与时区误差
+  const dayNum = (y, m, d) => Date.UTC(y, m - 1, d) / MS_PER_DAY;
+  const weekdayOf = (y, m, d) => new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const daysInMonth = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const isLeap = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+
+  function parseKey(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+    if (!m) return null;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    if (mo < 1 || mo > 12 || d < 1 || d > daysInMonth(y, mo)) return null;
+    return { y, m: mo, d };
+  }
+
+  // 第 n 周年对应的日期（2 月 29 日在非闰年按 2 月 28 日算）
+  function annivDate(p, n) {
+    const y = p.y + n;
+    const d = (p.m === 2 && p.d === 29 && !isLeap(y)) ? 28 : p.d;
+    return { y, m: p.m, d };
+  }
+
+  // 从今天起，下一个周年（含今天）
+  function nextAnniv(p, t) {
+    const tNum = dayNum(t.y, t.m, t.d);
+    let n = Math.max(1, t.y - p.y);
+    let a = annivDate(p, n);
+    while (dayNum(a.y, a.m, a.d) < tNum) { n++; a = annivDate(p, n); }
+    return { n, days: dayNum(a.y, a.m, a.d) - tNum };
+  }
+
+  // 东八区当前时间
+  let shFormatter = null;
+  try {
+    shFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+    });
+  } catch (e) { shFormatter = null; }
+
+  function nowSH() {
+    if (shFormatter) {
+      const p = {};
+      shFormatter.formatToParts(new Date()).forEach(x => { p[x.type] = x.value; });
+      const hh = p.hour === '24' ? '00' : p.hour;
+      return { y: +p.year, m: +p.month, d: +p.day, hh, mm: p.minute };
+    }
+    // 极老的浏览器不支持 timeZone 时的兜底：手动 UTC+8
+    const t = new Date(Date.now() + 8 * 3600000);
+    return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate(),
+             hh: pad(t.getUTCHours()), mm: pad(t.getUTCMinutes()) };
+  }
+
+  const cnDate = p => `${p.y}年${p.m}月${p.d}日 星期${WEEK[weekdayOf(p.y, p.m, p.d)]}`;
+  const dotDate = s => s.replace(/-/g, '.');
+
+  /* ---------------- 数据读写 ----------------
+   * 本地保存格式：{ items: [...], deleted: [...] }
+   * - 来自代码的条目带 src（"日期|标题"），删除时记入 deleted
+   * - 每次打开页面，代码里新增、且没被删除过的条目会自动并入
+   */
+  let uid = 0;
+  const keyOf = it => `${it.date}|${it.title}`;
+
+  function sanitize(arr) {
+    if (!Array.isArray(arr)) return null;
+    const out = [];
+    arr.forEach(it => {
+      if (!it || typeof it !== 'object') return;
+      const p = parseKey(it.date);
+      const title = typeof it.title === 'string' ? it.title.trim() : '';
+      if (!p || !title) return;
+      const item = {
+        id: ++uid, date: toKey(p.y, p.m, p.d), title,
+        desc: typeof it.desc === 'string' ? it.desc.trim() : '',
+        chapter: typeof it.chapter === 'string' ? it.chapter.trim() : ''
+      };
+      if (typeof it.src === 'string' && it.src) item.src = it.src;
+      out.push(item);
+    });
+    return out;
+  }
+
+  function codeItems() {
+    return (sanitize(ANNIVERSARIES) || []).map(it => Object.assign(it, { src: keyOf(it) }));
+  }
+
+  function mergeWithCode(items, deletedArr) {
+    const del = new Set(deletedArr);
+    const known = new Set();
+    items.forEach(it => { if (it.src) known.add(it.src); known.add(keyOf(it)); });
+    const extra = codeItems().filter(c => !del.has(c.src) && !known.has(c.src));
+    return items.concat(extra);
+  }
+
+  const plain = () => list.map(({ date, chapter, title, desc, src }) =>
+    Object.assign({ date, chapter, title, desc }, src ? { src } : {}));
+
+  function loadStored() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (Array.isArray(data)) return { items: sanitize(data) || [], deleted: [] }; // 旧格式
+      if (data && typeof data === 'object') {
+        return {
+          items: sanitize(data.items) || [],
+          deleted: Array.isArray(data.deleted) ? data.deleted.filter(x => typeof x === 'string') : []
+        };
+      }
+    } catch (e) { /* 忽略，使用初始数据 */ }
+    return null;
+  }
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: plain(), deleted }));
+      return true;
+    } catch (e) {
+      toast('浏览器不允许本地保存，本次修改刷新后会丢失');
+      return false;
+    }
+  }
+  function clearStored() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* 忽略 */ }
+  }
+
+  const stored = loadStored();
+  let deleted = stored ? stored.deleted : [];
+  let list = stored ? mergeWithCode(stored.items, deleted) : codeItems();
+
+  /* ---------------- 状态 ---------------- */
+  let today = nowSH();
+  let todayKey = toKey(today.y, today.m, today.d);
+  let view = { y: today.y, m: today.m };
+  let selected = todayKey;
+  let chapterFilter = '';
+  let lastMinute = '';
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------------- About 橹穆 ---------------- */
+  function renderProfiles() {
+    const tNum = dayNum(today.y, today.m, today.d);
+    const cards = PROFILES.map(pr => {
+      const b = parseKey(pr.birthday), dbt = parseKey(pr.debut);
+      const stats = [];
+      if (b) {
+        const nb = nextAnniv(b, today);
+        stats.push(nb.days === 0 ? `今天是 ${nb.n} 岁生日 🎂` : `距 ${nb.n} 岁生日还有 ${nb.days} 天`);
+      }
+      if (dbt) stats.push(`公开第 ${tNum - dayNum(dbt.y, dbt.m, dbt.d)} 天`);
+      const rows = [
+        ['生日', b ? dotDate(pr.birthday) : ''], ['公开时间', dbt ? dotDate(pr.debut) : ''],
+        ['星座', pr.zodiac], ['民族', pr.ethnic], ['MBTI', pr.mbti], ['昵称', pr.nick]
+      ].filter(r => r[1]);
+      return `<div class="profile ${pr.color === 'pink' ? 'pink' : 'blue'}">
+        <div class="p-head"><span class="p-name">${esc(pr.name)}</span><span class="p-role">${esc(pr.role || '')}</span></div>
+        <dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>
+        <div class="p-stats">${stats.map(s => `<span>${s}</span>`).join('')}</div>
+      </div>`;
+    });
+    $('profiles').innerHTML = cards.join('<div class="heart">♡</div>');
+  }
+
+  /* ---------------- 计算某天上的事件 ---------------- */
+  function eventsOn(y, m, d) {
+    const origin = [], yearly = [], bdays = [];
+    list.forEach(ev => {
+      const p = parseKey(ev.date);
+      if (p.y === y && p.m === m && p.d === d) { origin.push(ev); return; }
+      const n = y - p.y;
+      if (n >= 1) {
+        const a = annivDate(p, n);
+        if (a.m === m && a.d === d) yearly.push({ ev, n });
+      }
+    });
+    PROFILES.forEach(pr => {
+      const b = parseKey(pr.birthday);
+      if (!b || y < b.y) return;
+      const a = annivDate(b, y - b.y);
+      if (a.m === m && a.d === d) bdays.push({ pr, age: y - b.y });
+    });
+    return { origin, yearly, bdays };
+  }
+
+  /* ---------------- 日历渲染 ---------------- */
+  function renderCalendar(flashKey) {
+    $('monthLabel').textContent = `${view.y}年${view.m}月`;
+    const first = weekdayOf(view.y, view.m, 1);
+    const total = daysInMonth(view.y, view.m);
+    let html = '';
+    for (let i = 0; i < first; i++) html += '<div class="day empty"></div>';
+    for (let d = 1; d <= total; d++) {
+      const key = toKey(view.y, view.m, d);
+      const { origin, yearly, bdays } = eventsOn(view.y, view.m, d);
+      const cls = ['day'];
+      if (key === todayKey) cls.push('today');
+      if (key === selected) cls.push('selected');
+      if (key === flashKey) cls.push('flash');
+      let dots = '';
+      if (origin.length) dots += '<i class="dot"></i>';
+      if (yearly.length) dots += '<i class="dot anniv"></i>';
+      if (bdays.length) dots += '<i class="dot bday"></i>';
+      const tip = bdays.map(b => `${b.pr.name}生日`)
+        .concat(origin.map(e => e.title), yearly.map(x => x.ev.title)).join('、');
+      html += `<button class="${cls.join(' ')}" data-key="${key}" title="${esc(tip)}">
+                 <span>${d}</span><span class="dots">${dots}</span></button>`;
+    }
+    $('days').innerHTML = html;
+    renderDetail();
+  }
+
+  function renderDetail() {
+    const p = parseKey(selected);
+    const { origin, yearly, bdays } = eventsOn(p.y, p.m, p.d);
+    let html = `<h3>${cnDate(p)}${selected === todayKey ? ' · 今天' : ''}</h3>`;
+    if (!origin.length && !yearly.length && !bdays.length) {
+      html += '<p class="none">这一天还没有记录～</p>';
+    }
+    bdays.forEach(({ pr, age }) => {
+      html += `<div class="item"><span class="tag bday">生日</span><b>${esc(pr.name)}${age ? ` ${age} 岁生日 🎂` : ' 出生'}</b></div>`;
+    });
+    origin.forEach(ev => {
+      html += `<div class="item"><span class="tag origin">纪念日</span><b>${esc(ev.title)}</b>
+               ${ev.chapter ? `<div class="chap-line">${esc(ev.chapter)}</div>` : ''}
+               ${ev.desc ? `<p>${esc(ev.desc)}</p>` : ''}</div>`;
+    });
+    yearly.forEach(({ ev, n }) => {
+      html += `<div class="item"><span class="tag yearly">第 ${n} 周年</span><b>${esc(ev.title)}</b>
+               <p>${esc(ev.date)}${ev.chapter ? ' · ' + esc(ev.chapter) : ''}</p></div>`;
+    });
+    html += `<button class="link-btn" id="addOnDay">＋ 在这一天添加纪念日</button>`;
+    const box = $('detail');
+    box.innerHTML = html;
+    box.style.animation = 'none'; void box.offsetWidth; box.style.animation = '';
+    $('addOnDay').onclick = () => openForm(null, selected);
+  }
+
+  /* ---------------- 纪念日卡片 ---------------- */
+  function statsFor(ev) {
+    const p = parseKey(ev.date);
+    const tNum = dayNum(today.y, today.m, today.d);
+    const diff = tNum - dayNum(p.y, p.m, p.d); // 纪念日当天为 0
+    const meta = [];
+    if (diff >= 0) {
+      const na = nextAnniv(p, today);
+      meta.push(na.days === 0 ? `今天是第 ${na.n} 周年 🎉` : `下一个周年还有 ${na.days} 天（第 ${na.n} 周年）`);
+      if (diff > 0 && diff % 100 === 0) {
+        meta.push(`今天是第 ${diff} 天 🎉`);
+      } else {
+        const next = (Math.floor(diff / 100) + 1) * 100;
+        const hDays = next - diff;
+        if (hDays < na.days) meta.push(`距 ${next} 天还有 ${hDays} 天`);
+      }
+    } else {
+      meta.push(`那天是星期${WEEK[weekdayOf(p.y, p.m, p.d)]}，敬请期待`);
+    }
+    return { diff, meta };
+  }
+
+  // 章节顺序：按代码里出现的顺序，其余追加在后
+  function chapterOrder() {
+    const order = [];
+    ANNIVERSARIES.concat(list).forEach(it => {
+      const c = it && typeof it.chapter === 'string' ? it.chapter.trim() : '';
+      if (c && !order.includes(c)) order.push(c);
+    });
+    return order.filter(c => list.some(it => it.chapter === c));
+  }
+
+  function renderFilter() {
+    const chapters = chapterOrder();
+    if (chapterFilter && !chapters.includes(chapterFilter)) chapterFilter = '';
+    $('chapterFilter').innerHTML = `<option value="">全部章节</option>` +
+      chapters.map(c => `<option value="${esc(c)}"${c === chapterFilter ? ' selected' : ''}>${esc(c)}</option>`).join('');
+    $('chapterList').innerHTML = chapters.map(c => `<option value="${esc(c)}"></option>`).join('');
+  }
+
+  function renderList() {
+    $('asof').textContent = `截至 ${todayKey}`;
+    renderFilter();
+    const box = $('list');
+    const shown = list.filter(ev => !chapterFilter || ev.chapter === chapterFilter);
+    $('countInfo').textContent = chapterFilter ? `${shown.length} / ${list.length} 条` : `共 ${list.length} 条`;
+    if (!shown.length) {
+      box.innerHTML = '<div class="empty-tip">还没有纪念日，点「＋ 添加纪念日」写下第一笔吧 ♡</div>';
+      return;
+    }
+    const sorted = shown.slice().sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+    box.innerHTML = sorted.map(ev => {
+      const { diff, meta } = statsFor(ev);
+      const p = parseKey(ev.date);
+      let count, cls = 'card';
+      if (diff > 0) {
+        count = `<span class="label">已经过去 ·</span><span class="num">${diff}</span><span class="unit">天</span>`;
+      } else if (diff < 0) {
+        cls += ' future';
+        count = `<span class="label">还有</span><span class="num">${-diff}</span><span class="unit">天</span>`;
+      } else {
+        cls += ' is-today';
+        count = '<span class="party">就是今天 🎉</span>';
+      }
+      return `<article class="${cls}">
+        ${ev.chapter ? `<button class="chap" data-act="chap" data-id="${ev.id}" title="只看这一章">${esc(ev.chapter)}</button>` : ''}
+        <div class="card-top">
+          <h3>${esc(ev.title)}</h3>
+          <span class="date">${ev.date} 周${WEEK[weekdayOf(p.y, p.m, p.d)]}</span>
+        </div>
+        <div class="count">${count}</div>
+        ${ev.desc ? `<p class="desc">${esc(ev.desc)}</p>` : ''}
+        <div class="meta">${meta.map(m => `<span>${m}</span>`).join('')}</div>
+        <div class="card-actions">
+          <button class="btn soft small" data-act="view" data-id="${ev.id}">查看这一天</button>
+          <button class="btn ghost small" data-act="edit" data-id="${ev.id}">编辑</button>
+          <button class="btn danger small" data-act="del" data-id="${ev.id}">删除</button>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function renderAll() { renderProfiles(); renderCalendar(); renderList(); }
+
+  /* ---------------- 时钟 & 零点自动刷新 ---------------- */
+  function tick() {
+    const n = nowSH();
+    const minuteKey = `${toKey(n.y, n.m, n.d)} ${n.hh}:${n.mm}`;
+    if (minuteKey === lastMinute) return;
+    lastMinute = minuteKey;
+    $('clock').innerHTML = `${cnDate(n)} ${n.hh}:${n.mm}<small>北京时间</small>`;
+    const newKey = toKey(n.y, n.m, n.d);
+    if (newKey !== todayKey) {
+      const wasOnToday = selected === todayKey;
+      const viewWasToday = view.y === today.y && view.m === today.m;
+      today = n; todayKey = newKey;
+      if (wasOnToday) selected = todayKey;
+      if (viewWasToday) view = { y: n.y, m: n.m };
+      renderAll();
+    }
+  }
+
+  /* ---------------- 交互 ---------------- */
+  function goTo(key, flash) {
+    const p = parseKey(key);
+    view = { y: p.y, m: p.m };
+    selected = key;
+    renderCalendar(flash ? key : null);
+  }
+
+  $('prevMonth').onclick = () => {
+    view = view.m === 1 ? { y: view.y - 1, m: 12 } : { y: view.y, m: view.m - 1 };
+    renderCalendar();
+  };
+  $('nextMonth').onclick = () => {
+    view = view.m === 12 ? { y: view.y + 1, m: 1 } : { y: view.y, m: view.m + 1 };
+    renderCalendar();
+  };
+  $('goToday').onclick = () => goTo(todayKey, true);
+
+  $('days').addEventListener('click', e => {
+    const btn = e.target.closest('.day[data-key]');
+    if (!btn) return;
+    selected = btn.dataset.key;
+    renderCalendar();
+  });
+
+  $('chapterFilter').addEventListener('change', e => {
+    chapterFilter = e.target.value;
+    renderList();
+    $('list').scrollTop = 0;
+  });
+
+  $('list').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const ev = list.find(x => x.id === +btn.dataset.id);
+    if (!ev) return;
+    const act = btn.dataset.act;
+    if (act === 'chap') {
+      chapterFilter = ev.chapter;
+      renderList();
+      $('list').scrollTop = 0;
+    } else if (act === 'view') {
+      goTo(ev.date, true);
+      if (window.matchMedia('(max-width: 879px)').matches) {
+        $('calendarPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else if (act === 'edit') {
+      openForm(ev);
+    } else if (act === 'del') {
+      if (confirm(`确定删除「${ev.title}」吗？`)) {
+        const k = ev.src || keyOf(ev);
+        if (!deleted.includes(k)) deleted.push(k);
+        list = list.filter(x => x !== ev);
+        save(); renderAll(); toast('已删除');
+      }
+    }
+  });
+
+  /* 弹窗 */
+  let editing = null;
+  function openForm(ev, presetDate) {
+    editing = ev || null;
+    $('formTitle').textContent = ev ? '编辑纪念日' : '添加纪念日';
+    $('fDate').value = ev ? ev.date : (presetDate || todayKey);
+    $('fChapter').value = ev ? ev.chapter : (chapterFilter || '');
+    $('fTitle').value = ev ? ev.title : '';
+    $('fDesc').value = ev ? ev.desc : '';
+    $('fErr').textContent = '';
+    $('mask').classList.add('show');
+    setTimeout(() => $('fTitle').focus(), 50);
+  }
+  function closeForm() { $('mask').classList.remove('show'); editing = null; }
+  $('addBtn').onclick = () => openForm(null);
+  $('cancelBtn').onclick = closeForm;
+  $('mask').addEventListener('click', e => { if (e.target === $('mask')) closeForm(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const p = parseKey($('fDate').value);
+    const title = $('fTitle').value.trim();
+    const desc = $('fDesc').value.trim();
+    const chapter = $('fChapter').value.trim();
+    if (!p) { $('fErr').textContent = '请选择一个有效的日期'; return; }
+    if (!title) { $('fErr').textContent = '标题不能为空'; return; }
+    const date = toKey(p.y, p.m, p.d);
+    const wasEdit = !!editing;
+    if (editing) {
+      Object.assign(editing, { date, title, desc, chapter });
+    } else {
+      list.push({ id: ++uid, date, title, desc, chapter });
+    }
+    closeForm();
+    save();
+    renderList();
+    goTo(date, true);
+    toast(wasEdit ? '已保存修改' : '已添加 ♡');
+  });
+
+  /* 导出 / 导入 */
+  $('exportBtn').onclick = () => {
+    const data = { app: 'lumu-anniversary', version: 2, exportedAt: todayKey, anniversaries: plain(), deleted };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `橹穆纪念日-${todayKey}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast('已导出备份文件');
+  };
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try { parsed = JSON.parse(reader.result); } catch (err) { toast('文件不是有效的 JSON'); return; }
+      const arr = sanitize(Array.isArray(parsed) ? parsed : parsed && (parsed.anniversaries || parsed.items));
+      if (!arr || !arr.length) { toast('文件里没有找到有效的纪念日'); return; }
+      if (!confirm(`将导入 ${arr.length} 条纪念日，并覆盖当前的 ${list.length} 条，确定吗？`)) return;
+      deleted = (parsed && Array.isArray(parsed.deleted)) ? parsed.deleted.filter(x => typeof x === 'string') : [];
+      list = mergeWithCode(arr, deleted);
+      save(); renderAll();
+      toast(`已导入，共 ${list.length} 条纪念日`);
+    };
+    reader.onerror = () => toast('读取文件失败');
+    reader.readAsText(file, 'utf-8');
+  });
+
+  $('resetBtn').onclick = () => {
+    if (!confirm('将清除本浏览器保存的所有修改（包括网页上添加的纪念日），恢复为代码中的数据。建议先导出备份。确定吗？')) return;
+    clearStored();
+    deleted = [];
+    list = codeItems();
+    chapterFilter = '';
+    renderAll(); toast('已恢复初始数据');
+  };
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  /* ---------------- 启动 ---------------- */
+  tick();
+  renderAll();
+  setInterval(tick, 1000); // 每秒检查一次，分钟变化才更新显示；跨过零点自动重算
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+})();
+</script>
+</body>
+</html>

@@ -207,6 +207,7 @@
   footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 26px; }
   footer .tbc { font-size: 18px; color: var(--pink-deep); letter-spacing: 3px; margin-bottom: 8px; }
   footer button { font-size: 12px; }
+  footer .contact-btn { font-size: 14px; margin: 14px 0 10px; }
 
   /* ---------- 弹窗 ---------- */
   .mask {
@@ -220,11 +221,14 @@
   }
   .modal h3 { margin: 0 0 14px; color: var(--pink-deep); }
   .modal label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  .modal input, .modal textarea {
+  .modal input, .modal textarea, .modal select {
     width: 100%; font: inherit; color: var(--text); padding: 9px 12px;
     border: 1px solid var(--line); border-radius: 10px; background: #fffafc; outline: none;
   }
-  .modal input:focus, .modal textarea:focus { border-color: var(--pink); background: #fff; }
+  .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--pink); background: #fff; }
+  .modal .hint { font-size: 12px; color: var(--muted); margin: -6px 0 4px; }
+  .modal .mail-line { font-size: 12px; color: var(--muted); margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .modal .mail-line b { color: var(--blue-deep); font-weight: 600; word-break: break-all; }
   .modal textarea { min-height: 90px; resize: vertical; }
   .modal .err { color: #d0577b; font-size: 13px; min-height: 18px; margin-top: 6px; }
   .modal .row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
@@ -426,7 +430,38 @@ const ANNIVERSARIES = [
     <div class="tbc">未完待续……</div>
     <div>所有时间均按北京时间（东八区）计算 · 网页上的修改仅保存在本浏览器</div>
     <button class="link-btn" id="resetBtn">恢复为代码中的初始数据</button>
+    <div><button class="btn soft contact-btn" id="contactBtn">✉ 联系我们</button></div>
   </footer>
+</div>
+
+<!-- 联系我们弹窗 -->
+<div class="mask" id="contactMask">
+  <form class="modal" id="contactForm" autocomplete="off">
+    <h3>✉ 联系我们</h3>
+    <p class="hint">补充纪念日、纠错或者想说的话，都欢迎告诉我们～</p>
+    <label for="cName">你的称呼（可选）</label>
+    <input type="text" id="cName" maxlength="40" placeholder="怎么称呼你">
+    <label for="cReply">你的联系方式（可选）</label>
+    <input type="text" id="cReply" maxlength="80" placeholder="邮箱 / 微博 / 其他，方便我们回复你">
+    <label for="cType">类型</label>
+    <select id="cType">
+      <option>补充纪念日</option>
+      <option>内容纠错</option>
+      <option>网页建议</option>
+      <option>其他</option>
+    </select>
+    <label for="cMsg">内容</label>
+    <textarea id="cMsg" maxlength="1500" placeholder="例如：第二十三章的日期是……"></textarea>
+    <div class="err" id="cErr"></div>
+    <div class="row">
+      <button type="button" class="btn ghost" id="cCancel">取消</button>
+      <button type="submit" class="btn primary">发送邮件</button>
+    </div>
+    <div class="mail-line">
+      点击发送后会打开你的邮件 App。也可以直接发邮件到 <b id="cAddr"></b>
+      <button type="button" class="link-btn" id="cCopy" style="margin-top:0">复制邮箱</button>
+    </div>
+  </form>
 </div>
 
 <!-- 添加 / 编辑弹窗 -->
@@ -880,7 +915,52 @@ const ANNIVERSARIES = [
   $('addBtn').onclick = () => openForm(null);
   $('cancelBtn').onclick = closeForm;
   $('mask').addEventListener('click', e => { if (e.target === $('mask')) closeForm(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeForm(); closeContact(); } });
+
+  /* 联系我们：生成邮件草稿，用访客自己的邮件 App 发送 */
+  const CONTACT_EMAIL = 'akatprojector@outlook.com';
+  $('cAddr').textContent = CONTACT_EMAIL;
+  function openContact() {
+    $('cErr').textContent = '';
+    $('contactMask').classList.add('show');
+    setTimeout(() => $('cMsg').focus(), 50);
+  }
+  function closeContact() { $('contactMask').classList.remove('show'); }
+  $('contactBtn').onclick = openContact;
+  $('cCancel').onclick = closeContact;
+  $('contactMask').addEventListener('click', e => { if (e.target === $('contactMask')) closeContact(); });
+
+  $('contactForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const msg = $('cMsg').value.trim();
+    if (!msg) { $('cErr').textContent = '内容不能为空'; return; }
+    const name = $('cName').value.trim();
+    const reply = $('cReply').value.trim();
+    const type = $('cType').value;
+    const subject = `【橹穆恋爱日志】${type}${name ? ' - ' + name : ''}`;
+    const body = [
+      msg, '', '——',
+      `称呼：${name || '（未填写）'}`,
+      `联系方式：${reply || '（未填写）'}`,
+      `发送时间：${todayKey}（北京时间）`,
+      `来自：${location.href}`
+    ].join('\n');
+    location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    toast('正在打开邮件 App，确认后点发送即可');
+  });
+
+  $('cCopy').onclick = () => {
+    const done = () => toast('邮箱已复制');
+    const fallback = () => {
+      const t = document.createElement('textarea');
+      t.value = CONTACT_EMAIL; document.body.appendChild(t); t.select();
+      try { document.execCommand('copy'); done(); } catch (err) { toast(CONTACT_EMAIL); }
+      t.remove();
+    };
+    try {
+      navigator.clipboard.writeText(CONTACT_EMAIL).then(done, fallback);
+    } catch (err) { fallback(); }
+  };
 
   $('form').addEventListener('submit', e => {
     e.preventDefault();

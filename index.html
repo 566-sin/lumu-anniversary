@@ -452,13 +452,15 @@ const ANNIVERSARIES = [
     </select>
     <label for="cMsg">内容</label>
     <textarea id="cMsg" maxlength="1500" placeholder="例如：第二十三章的日期是……"></textarea>
+    <input type="text" id="cTrap" tabindex="-1" autocomplete="off" aria-hidden="true"
+           style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     <div class="err" id="cErr"></div>
     <div class="row">
       <button type="button" class="btn ghost" id="cCancel">取消</button>
-      <button type="submit" class="btn primary">发送邮件</button>
+      <button type="submit" class="btn primary" id="cSend">发送</button>
     </div>
     <div class="mail-line">
-      点击发送后会打开你的邮件 App。也可以直接发邮件到 <b id="cAddr"></b>
+      <span id="cNote"></span>也可以直接发邮件到 <b id="cAddr"></b>
       <button type="button" class="link-btn" id="cCopy" style="margin-top:0">复制邮箱</button>
     </div>
   </form>
@@ -917,9 +919,14 @@ const ANNIVERSARIES = [
   $('mask').addEventListener('click', e => { if (e.target === $('mask')) closeForm(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeForm(); closeContact(); } });
 
-  /* 联系我们：生成邮件草稿，用访客自己的邮件 App 发送 */
+  /* 联系我们
+   * - FORMSPREE_ID 填了：网页直接把消息发到你的邮箱（通过 Formspree）
+   * - FORMSPREE_ID 为空或发送失败：改为打开访客自己的邮件 App
+   */
   const CONTACT_EMAIL = 'akatprojector@outlook.com';
+  const FORMSPREE_ID = 'xrpewopy';  // Formspree 表单 ID（formspree.io/f/ 后面那串）
   $('cAddr').textContent = CONTACT_EMAIL;
+  $('cNote').textContent = FORMSPREE_ID ? '消息会直接发送给我们。' : '点击发送后会打开你的邮件 App。';
   function openContact() {
     $('cErr').textContent = '';
     $('contactMask').classList.add('show');
@@ -930,10 +937,17 @@ const ANNIVERSARIES = [
   $('cCancel').onclick = closeContact;
   $('contactMask').addEventListener('click', e => { if (e.target === $('contactMask')) closeContact(); });
 
-  $('contactForm').addEventListener('submit', e => {
+  function openMailApp(subject, body) {
+    location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  let sending = false;
+  $('contactForm').addEventListener('submit', async e => {
     e.preventDefault();
+    if (sending) return;
     const msg = $('cMsg').value.trim();
     if (!msg) { $('cErr').textContent = '内容不能为空'; return; }
+    $('cErr').textContent = '';
     const name = $('cName').value.trim();
     const reply = $('cReply').value.trim();
     const type = $('cType').value;
@@ -945,8 +959,34 @@ const ANNIVERSARIES = [
       `发送时间：${todayKey}（北京时间）`,
       `来自：${location.href}`
     ].join('\n');
-    location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    toast('正在打开邮件 App，确认后点发送即可');
+
+    if (!FORMSPREE_ID) {
+      openMailApp(subject, body);
+      toast('正在打开邮件 App，确认后点发送即可');
+      return;
+    }
+
+    sending = true;
+    $('cSend').textContent = '发送中…';
+    try {
+      const payload = { _subject: subject, 类型: type, 称呼: name || '（未填写）',
+                        联系方式: reply || '（未填写）', 内容: msg, 页面: location.href, _gotcha: $('cTrap').value };
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(reply)) payload._replyto = reply; // 填了邮箱就能直接回复
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      $('contactForm').reset();
+      closeContact();
+      toast('已发送，谢谢你 ♡');
+    } catch (err) {
+      $('cErr').textContent = '发送失败了，可以再试一次，或点下面复制邮箱自己发邮件。';
+    } finally {
+      sending = false;
+      $('cSend').textContent = '发送';
+    }
   });
 
   $('cCopy').onclick = () => {

@@ -420,6 +420,12 @@ const ANNIVERSARIES = [
       <div class="filter">
         <label for="chapterFilter">章节</label>
         <select id="chapterFilter"></select>
+        <label for="sortMode">排序</label>
+        <select id="sortMode">
+          <option value="new">按发生时间：从新到旧</option>
+          <option value="old">按发生时间：从旧到新</option>
+          <option value="soon">按即将到来：最近的在前</option>
+        </select>
         <span id="countInfo"></span>
       </div>
       <div class="anniv-list" id="list"></div>
@@ -636,6 +642,12 @@ const ANNIVERSARIES = [
   let view = { y: today.y, m: today.m };
   let selected = todayKey;
   let chapterFilter = '';
+  const SORT_KEY = 'lumu-sort-mode';
+  let sortMode = 'new';
+  try {
+    const s = localStorage.getItem(SORT_KEY);
+    if (s === 'new' || s === 'old' || s === 'soon') sortMode = s;
+  } catch (e) { /* 忽略 */ }
   let lastMinute = '';
 
   const $ = id => document.getElementById(id);
@@ -746,20 +758,24 @@ const ANNIVERSARIES = [
     const tNum = dayNum(today.y, today.m, today.d);
     const diff = tNum - dayNum(p.y, p.m, p.d); // 纪念日当天为 0
     const meta = [];
+    let soon; // 距离下一个值得纪念的日子（当天 / 周年 / 整百天）还有几天
     if (diff >= 0) {
       const na = nextAnniv(p, today);
+      soon = diff === 0 ? 0 : na.days;
       meta.push(na.days === 0 ? `今天是第 ${na.n} 周年 🎉` : `下一个周年还有 ${na.days} 天（第 ${na.n} 周年）`);
       if (diff > 0 && diff % 100 === 0) {
         meta.push(`今天是第 ${diff} 天 🎉`);
+        soon = 0;
       } else {
         const next = (Math.floor(diff / 100) + 1) * 100;
         const hDays = next - diff;
-        if (hDays < na.days) meta.push(`距 ${next} 天还有 ${hDays} 天`);
+        if (hDays < na.days) { meta.push(`距 ${next} 天还有 ${hDays} 天`); soon = Math.min(soon, hDays); }
       }
     } else {
+      soon = -diff;
       meta.push(`那天是星期${WEEK[weekdayOf(p.y, p.m, p.d)]}，敬请期待`);
     }
-    return { diff, meta };
+    return { diff, meta, soon };
   }
 
   // 章节顺序：按代码里出现的顺序，其余追加在后
@@ -790,9 +806,13 @@ const ANNIVERSARIES = [
       box.innerHTML = '<div class="empty-tip">还没有纪念日，点「＋ 添加纪念日」写下第一笔吧 ♡</div>';
       return;
     }
-    const sorted = shown.slice().sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
-    box.innerHTML = sorted.map(ev => {
-      const { diff, meta } = statsFor(ev);
+    const rows = shown.map(ev => Object.assign({ ev }, statsFor(ev)));
+    rows.sort((a, b) => {
+      if (sortMode === 'old') return a.ev.date.localeCompare(b.ev.date) || a.ev.id - b.ev.id;
+      if (sortMode === 'soon') return a.soon - b.soon || b.ev.date.localeCompare(a.ev.date);
+      return b.ev.date.localeCompare(a.ev.date) || b.ev.id - a.ev.id;
+    });
+    box.innerHTML = rows.map(({ ev, diff, meta }) => {
       const p = parseKey(ev.date);
       let count, cls = 'card';
       if (diff > 0) {
@@ -865,6 +885,14 @@ const ANNIVERSARIES = [
     if (!btn) return;
     selected = btn.dataset.key;
     renderCalendar();
+  });
+
+  $('sortMode').value = sortMode;
+  $('sortMode').addEventListener('change', e => {
+    sortMode = e.target.value;
+    try { localStorage.setItem(SORT_KEY, sortMode); } catch (err) { /* 忽略 */ }
+    renderList();
+    $('list').scrollTop = 0;
   });
 
   $('chapterFilter').addEventListener('change', e => {
